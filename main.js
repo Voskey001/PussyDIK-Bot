@@ -5,6 +5,7 @@
 //GitHub: @Voskey
 //WhatsApp: https://whatsapp.com/channel/0029VaFSC1RGE56irWiKvw32
 //want more free bot scripts? subscribe to my youtube channel: https://youtube.com/@Voskey
+
 require('./settings')
 const pino = require('pino')
 const { Boom } = require('@hapi/boom')
@@ -167,73 +168,553 @@ GlobalTechInc.ev.on("connection.update",async  (s) => {
         ) {
             startGlobalTechInc()
         }
-        if (
-            connection === "close" &&
-            lastDisconnect &&
-            lastDisconnect.error &&
-            lastDisconnect.error.output.statusCode === 401
-        ) {
-            console.log(chalk.bgBlack(chalk.redBright("Error: 401 Unauthorized")))
-            console.log(chalk.bgBlack(chalk.redBright("Please check your internet connection or restart the bot")))
-            process.exit(0)
+        if (connection === 'connecting') {
+            console.log(chalk.black(chalk.bgGreen(`Connecting...`)))
+        }
+        if (connection === 'open') {
+            console.log(chalk.black(chalk.bgGreen(`Connected successfully!`)))
+        }
+        if (connection === 'close') {
+            console.log(chalk.black(chalk.bgRed(`Connection closed. Reconnecting...`)))
+        }
+        if (connection === 'connecting') {
+            console.log(chalk.black(chalk.bgYellow(`Connecting...`)))
         }
     })
-    GlobalTechInc.ev.on('creds.update', saveCreds)
-   GlobalTechInc.ev.on('group-participants.update', async (anu) => {
-      console.log(anu)
-    })
-    GlobalTechInc.ev.on('group-update', async (anu) => {
-      console.log(anu)
-    })
-    GlobalTechInc.ev.on("chats.update", async (chatsUpdate) => {
-      // console.log(JSON.stringify(chatsUpdate, undefined, 2))
-    })
-    GlobalTechInc.ev.on("message-delete", async (m) => {
-      // console.log(JSON.stringify(m, undefined, 2))
-      // if (m.key.remoteJid == "status@broadcast") return // ignore status
-      // if (!m.key.fromMe) return
-      // if (m.key.id.startsWith("BAE5") && m.key.id.length === 16) return // ignore message ID like "BAE5..."
-      // m.message = (Object.keys(m.message)[0] === 'ephemeralMessage') ? m.message.ephemeralMessage.message : m.message
-      // try {
-      //   const chat = await GlobalTechInc.chatModify({ markAsRead: true, lastRead: m.key.id }, { remoteJid: m.key.remoteJid })
-      //   const mtd = m.message.extendedTextMessage?.contextInfo?.quotedMessage.extendedTextMessage?.contextInfo?.participant || null
-      //   const mmtd = m.message.extendedTextMessage?.contextInfo?.mentionedJid || []
-      //   let msg = '```\n'
-      //   msg += `• ${GlobalTechInc.getName(m.key.remoteJid)} \n`
-      //   msg += `• ${m.key.id.slice(0, 10)}\n`
-      //   msg += `• ${chat.read.length}\n`
-      //   msg += `• ${chat.unread}\n`
-      //   msg += `• ${chat.read.length + chat.unread}\n`
-      //   msg += '\n```'
-      //   // console.log(mtd, mmtd)
-      //   // await GlobalTechInc.sendMessage(m.key.remoteJid, { text: msg }, { quoted: m.message })
-      //   // await sleep(1999)
-      //   // await GlobalTechInc.sendMessage(m.key.remoteJid, { text: '```\n' + '• ' + GlobalTechInc.getName(m.key.remoteJid) + '\n' + '• ' + m.key.id.slice(0, 10) + '\n' + '• ' + chat.read.length + '\n' + '• ' + chat.unread + '\n' + '• ' + chat.read.length + chat.unread + '\n' + '```' }, { quoted: m.message })
-      // } catch (error) {
-      //   // console.log(error)
-      // }
-    })
-  //  GlobalTechInc.ev.on('call', async (phone) => {
-  //  	console.log(phone);
-  //  	if (phone.isGroup === false && phone.status === "ringing") {
-  //  		console.log("Incoming Call from: " + phone.peerJid);
-  //  		await GlobalTechInc.sendPresenceUpdate('unavailable', phone.peerJid);
-  //  	}
-  //  })
-    GlobalTechInc.ev.on('call', async (phone) => {
-        // console.log(phone);
-        if (phone.isGroup === false && phone.status === "ringing") {
-            // console.log("Incoming Call from: " + phone.peerJid);
-            await GlobalTechInc.sendPresenceUpdate('unavailable', phone.peerJid);
+    GlobalTechInc.ev.on("creds.update", saveCreds)
+    // Handler for incoming messages
+    GlobalTechInc.ev.on('messages.upsert', async m => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m.messages[0]
+            if (!mek.message) return
+            mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
+            if (mek.key && mek.key.remoteJid === 'status@broadcast') return
+            if (mek.key.id.startsWith('BAE5') && mek.key.id.length === 16) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
         }
     })
-    await GlobalTechInc.connect()
-    .then((res) => {
-        console.log(chalk.bgBlack(chalk.greenBright("🚀 Bot Started!")))
-        console.log(chalk.bgBlack(chalk.greenBright("🚀 Waiting for incoming messages...")))
+    // Group update handler
+    GlobalTechInc.ev.on('group-participants.update', async (a) => {
+        try {
+            const m = {
+                id: a.jid,
+                participants: a.participants,
+                action: a.action
+            }
+            require('./XeonBug8')(GlobalTechInc, m, a, store)
+        } catch (err) {
+            console.log(err)
+        }
     })
-    .catch((err) => {
-        console.log(chalk.bgBlack(chalk.redBright(err)))
+    // Group update handler
+    GlobalTechInc.ev.on('groups.update', async (a) => {
+        try {
+            const m = {
+                id: a.id,
+                subject: a.subject,
+                desc: a.desc,
+                icon: a.icon,
+                revoke: a.revoke,
+                participants: a.participants
+            }
+            require('./XeonBug8')(GlobalTechInc, m, a, store)
+        } catch (err) {
+            console.log(err)
+        }
     })
-}
-startGlobalTechInc()
+   // Setting bot status to Online
+    GlobalTechInc.ev.on('connection.update', async (update) => {
+        if (update.connection === 'open') {
+            await GlobalTechInc.sendPresenceUpdate('available', update.jid);
+        }
+    });
+   // Handler for incoming messages
+   GlobalTechInc.ev.on('messages.upsert', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m.messages[0]
+            if (!mek.message) return
+            mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
+            if (mek.key && mek.key.remoteJid === 'status@broadcast') return
+            if (mek.key.id.startsWith('BAE5') && mek.key.id.length === 16) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+    GlobalTechInc.ev.on('messages.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m.messages[0]
+            if (!mek.message) return
+            mek.message = (Object.keys(mek.message)[0] === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
+            if (mek.key && mek.key.remoteJid === 'status@broadcast') return
+            if (mek.key.id.startsWith('BAE5') && mek.key.id.length === 16) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+    GlobalTechInc.ev.on('group-participants.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.participants) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+   // Handler for incoming messages
+   GlobalTechInc.ev.on('groups.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.subject) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('message-delete', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.keys) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+   // Handler for incoming messages
+   GlobalTechInc.ev.on('call', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.isGroup) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('chats.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.isGroup) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('blocklist.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.blocklist) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('quoted-message', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.quoted) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('sender-key-distribution-message', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.senderKeyDistributionMessage) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('group-leave', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.participants) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('group-join', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.participants) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('groups.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.subject) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('chats.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.isGroup) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('group-participants.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.participants) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('message-delete', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.keys) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('call', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.isGroup) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('chats.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.isGroup) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('blocklist.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.blocklist) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('quoted-message', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.quoted) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('sender-key-distribution-message', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.senderKeyDistributionMessage) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('group-leave', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.participants) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('group-join', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.participants) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('groups.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.subject) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('chats.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.isGroup) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('group-participants.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.participants) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('message-delete', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.keys) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('call', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.isGroup) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('chats.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.isGroup) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('blocklist.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.blocklist) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('quoted-message', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.quoted) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('sender-key-distribution-message', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.senderKeyDistributionMessage) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('group-leave', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.participants) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('group-join', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.participants) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('groups.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.subject) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('chats.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.isGroup) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('group-participants.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.participants) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('message-delete', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.keys) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('call', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.isGroup) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
+    // Handler for incoming messages
+   GlobalTechInc.ev.on('chats.update', async (m) => {
+        try {
+            //console.log(JSON.stringify(m, undefined, 2))
+            const mek = m
+            if (!mek.isGroup) return
+            const m = smsg(GlobalTechInc, mek, store)
+            require("./XeonBug8")(GlobalTechInc, m, mek, store)
+        } catch (err) {
+            console.log(err)
+        }
+    })
