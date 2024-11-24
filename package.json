@@ -3,7 +3,7 @@
     "version": "8.0.0",
     "description": "WhatsApp Pussy Bot Using Nodejs",
     "main": "index.js",
-    "type": "commonjs",
+    "type": "common.js",
     "directories": {
         "lib": "lib",
         "database": "database",
