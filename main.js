@@ -166,4 +166,74 @@ GlobalTechInc.ev.on("connection.update",async  (s) => {
             lastDisconnect.error.output.statusCode != 401
         ) {
             startGlobalTechInc()
-      ...[Truncated]
+        }
+        if (
+            connection === "close" &&
+            lastDisconnect &&
+            lastDisconnect.error &&
+            lastDisconnect.error.output.statusCode === 401
+        ) {
+            console.log(chalk.bgBlack(chalk.redBright("Error: 401 Unauthorized")))
+            console.log(chalk.bgBlack(chalk.redBright("Please check your internet connection or restart the bot")))
+            process.exit(0)
+        }
+    })
+    GlobalTechInc.ev.on('creds.update', saveCreds)
+   GlobalTechInc.ev.on('group-participants.update', async (anu) => {
+      console.log(anu)
+    })
+    GlobalTechInc.ev.on('group-update', async (anu) => {
+      console.log(anu)
+    })
+    GlobalTechInc.ev.on("chats.update", async (chatsUpdate) => {
+      // console.log(JSON.stringify(chatsUpdate, undefined, 2))
+    })
+    GlobalTechInc.ev.on("message-delete", async (m) => {
+      // console.log(JSON.stringify(m, undefined, 2))
+      // if (m.key.remoteJid == "status@broadcast") return // ignore status
+      // if (!m.key.fromMe) return
+      // if (m.key.id.startsWith("BAE5") && m.key.id.length === 16) return // ignore message ID like "BAE5..."
+      // m.message = (Object.keys(m.message)[0] === 'ephemeralMessage') ? m.message.ephemeralMessage.message : m.message
+      // try {
+      //   const chat = await GlobalTechInc.chatModify({ markAsRead: true, lastRead: m.key.id }, { remoteJid: m.key.remoteJid })
+      //   const mtd = m.message.extendedTextMessage?.contextInfo?.quotedMessage.extendedTextMessage?.contextInfo?.participant || null
+      //   const mmtd = m.message.extendedTextMessage?.contextInfo?.mentionedJid || []
+      //   let msg = '```\n'
+      //   msg += `• ${GlobalTechInc.getName(m.key.remoteJid)} \n`
+      //   msg += `• ${m.key.id.slice(0, 10)}\n`
+      //   msg += `• ${chat.read.length}\n`
+      //   msg += `• ${chat.unread}\n`
+      //   msg += `• ${chat.read.length + chat.unread}\n`
+      //   msg += '\n```'
+      //   // console.log(mtd, mmtd)
+      //   // await GlobalTechInc.sendMessage(m.key.remoteJid, { text: msg }, { quoted: m.message })
+      //   // await sleep(1999)
+      //   // await GlobalTechInc.sendMessage(m.key.remoteJid, { text: '```\n' + '• ' + GlobalTechInc.getName(m.key.remoteJid) + '\n' + '• ' + m.key.id.slice(0, 10) + '\n' + '• ' + chat.read.length + '\n' + '• ' + chat.unread + '\n' + '• ' + chat.read.length + chat.unread + '\n' + '```' }, { quoted: m.message })
+      // } catch (error) {
+      //   // console.log(error)
+      // }
+    })
+  //  GlobalTechInc.ev.on('call', async (phone) => {
+  //  	console.log(phone);
+  //  	if (phone.isGroup === false && phone.status === "ringing") {
+  //  		console.log("Incoming Call from: " + phone.peerJid);
+  //  		await GlobalTechInc.sendPresenceUpdate('unavailable', phone.peerJid);
+  //  	}
+  //  })
+    GlobalTechInc.ev.on('call', async (phone) => {
+        // console.log(phone);
+        if (phone.isGroup === false && phone.status === "ringing") {
+            // console.log("Incoming Call from: " + phone.peerJid);
+            await GlobalTechInc.sendPresenceUpdate('unavailable', phone.peerJid);
+        }
+    })
+    await GlobalTechInc.connect()
+    .then((res) => {
+        console.log(chalk.bgBlack(chalk.greenBright("🚀 Bot Started!")))
+        console.log(chalk.bgBlack(chalk.greenBright("🚀 Waiting for incoming messages...")))
+    })
+    .catch((err) => {
+        console.log(chalk.bgBlack(chalk.redBright(err)))
+    })
+}
+startGlobalTechInc()
