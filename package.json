@@ -1,7 +1,7 @@
 {
-    "name": "XBug-Bot",
+    "name": "PussyDIK-Bot",
     "version": "8.0.0",
-    "description": "WhatsApp War Bot Using Nodejs",
+    "description": "WhatsApp Pussy Bot Using Nodejs",
     "main": "index.js",
     "type": "commonjs",
     "directories": {
@@ -14,7 +14,7 @@
     "scripts": {
         "start": "node index.js"
     },
-    "author": "GlobalTechInfo",
+    "author": "Voskey",
     "license": "Apache-2.0",
     "dependencies": {
         "@whiskeysockets/baileys": "^6.7.9",
